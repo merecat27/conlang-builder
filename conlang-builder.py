@@ -1,17 +1,7 @@
-from hashlib import new
 from pyfiglet import Figlet
 import sqlite3 #import module
 
 #DEFINE FUNCTIONS
-
-# def print_dict(database):  # temporary test function to print dictionary contents
-#     conn = sqlite3.connect(database)
-#     cursor = conn.cursor()
-#     results = cursor.execute("SELECT * FROM dictionary ORDER BY natword ASC;")
-#     list = results.fetchall()
-#     cursor.close()
-#     conn.close()
-#     print(list)
 
 def check_for_natword(database, natword):
     conn = sqlite3.connect(database)
@@ -64,30 +54,16 @@ def translate_con_to_nat(database, conword):
     conn.close()
     if not conword:
         return "Word doesn't exist."
-    return "".join(conword)
-
-# def edit_entry_by_nat(database, natword, newconword):
-#     conn = sqlite3.connect(database)
-#     cursor = conn.cursor()
-#     cursor.execute("UPDATE dictionary SET conword=? WHERE natword=?", (newconword, natword))
-#     conn.commit()
-#     cursor.close()
-#     conn.close()
-#     return "Updated entry: now the word for " + natword + " is " + newconword
-
-# def edit_entry_by_con(database, conword, newnatword):
-#     conn = sqlite3.connect(database)
-#     cursor = conn.cursor()
-#     cursor.execute("UPDATE dictionary SET natword=? WHERE conword=?", (newnatword, conword))
-#     conn.commit()
-#     cursor.close()
-#     conn.close()
-#     return "Updated entry: now " + conword + " is the word for " + newnatword
+    return "".join(natword)
 
 def edit_entry(database, refNat, newNat, newCon):
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
     refCon = cursor.execute("SELECT conword FROM dictionary WHERE natword=?", (refNat,)).fetchone()[0]
+    if newNat == "":
+        newNat = refNat
+    if newCon == "":
+        newCon = refCon
     if refNat == newNat and refCon == newCon:
         return "There doesn't seem to be any change here!"
     elif refNat != newNat and refCon != newCon:
@@ -164,8 +140,8 @@ while(True):
             print(result)
         case "5" | "edit": #edit_entry
             refNat = input("Which natword do you want to edit the entry for?\n")
-            newNat = input("Natword: ")
-            newCon = input("Conword: ")
+            newNat = input("Natword (leave empty for no change): ")
+            newCon = input("Conword (leave empty for no change): ")
             print(edit_entry(database, refNat, newNat, newCon))
         case "6" | "quit":
             break
