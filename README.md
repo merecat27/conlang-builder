@@ -14,3 +14,5 @@ Planned features:
 * a nicer CLI?
 * some way to keep track of word structure rules
 * perhaps even an automatic word generator based on your rules
+* export to CSV
+* word categories
