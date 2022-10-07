@@ -1,22 +1,17 @@
+from hashlib import new
+from pyfiglet import Figlet
 import sqlite3 #import module
 
 #DEFINE FUNCTIONS
-def print_dict(database):  # temporary test function to print dictionary contents
-    conn = sqlite3.connect(database)
-    cursor = conn.cursor()
-    results = cursor.execute("SELECT * FROM dictionary ORDER BY natword ASC;")
-    list = results.fetchall()
-    cursor.close()
-    conn.close()
-    print(list)
 
-# def check_if_exists(database, word):  # possibly delete this func
+# def print_dict(database):  # temporary test function to print dictionary contents
 #     conn = sqlite3.connect(database)
 #     cursor = conn.cursor()
-#     existsBool = cursor.execute("SELECT 1 FROM dictionary WHERE (natword=? OR conword=?)", (word,word)).fetchone()
+#     results = cursor.execute("SELECT * FROM dictionary ORDER BY natword ASC;")
+#     list = results.fetchall()
 #     cursor.close()
 #     conn.close()
-#     return existsBool
+#     print(list)
 
 def check_for_natword(database, natword):
     conn = sqlite3.connect(database)
@@ -71,23 +66,40 @@ def translate_con_to_nat(database, conword):
         return "Word doesn't exist."
     return "".join(conword)
 
-def edit_entry_by_nat(database, natword, newconword):
-    conn = sqlite3.connect(database)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE dictionary SET conword=? WHERE natword=?", (newconword, natword))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return "Updated entry: now the word for " + natword + " is " + newconword
+# def edit_entry_by_nat(database, natword, newconword):
+#     conn = sqlite3.connect(database)
+#     cursor = conn.cursor()
+#     cursor.execute("UPDATE dictionary SET conword=? WHERE natword=?", (newconword, natword))
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
+#     return "Updated entry: now the word for " + natword + " is " + newconword
 
-def edit_entry_by_con(database, conword, newnatword):
+# def edit_entry_by_con(database, conword, newnatword):
+#     conn = sqlite3.connect(database)
+#     cursor = conn.cursor()
+#     cursor.execute("UPDATE dictionary SET natword=? WHERE conword=?", (newnatword, conword))
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
+#     return "Updated entry: now " + conword + " is the word for " + newnatword
+
+def edit_entry(database, refNat, newNat, newCon):
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
-    cursor.execute("UPDATE dictionary SET natword=? WHERE conword=?", (newnatword, conword))
+    refCon = cursor.execute("SELECT conword FROM dictionary WHERE natword=?", (refNat,)).fetchone()[0]
+    if refNat == newNat and refCon == newCon:
+        return "There doesn't seem to be any change here!"
+    elif refNat != newNat and refCon != newCon:
+        return "You seem to be trying to add a completely new entry! You can only edit one part of the entry at a time."
+    elif refNat != newNat:
+        cursor.execute("UPDATE dictionary SET natword=? WHERE conword=?", (newNat, refCon))
+    elif refCon != newCon:
+        cursor.execute("UPDATE dictionary SET conword=? WHERE natword=?", (newCon, refNat))
     conn.commit()
     cursor.close()
     conn.close()
-    return "Updated entry: now " + conword + " is the word for " + newnatword
+    return "Entry has been edited!"
 
 def print_dictionary(database):
     conn = sqlite3.connect(database)
@@ -98,13 +110,16 @@ def print_dictionary(database):
     for row in results:
         print(row[0] + ": " + row[1])
 
-#Options:
-#   [ ] change language
-#   [x] translate conlang to natlang
-#   [x] translate natlang to conlang
-#   [x] edit entry
-#   [x] define a new word (natlang to conlang)
-#   [x] display list
+# def export_to_csv(database):
+    
+
+def print_options():
+    print("1) help: display this list of options")
+    print("2) print: print your dictionary")
+    print("3) new: add new entry")
+    print("4) trans: look up a word's translation in either direction")
+    print("5) edit: edit an existing entry")
+    print("6) quit: exit the program")
 
 #First: select language (create and open new or open existing)
 #language = input("Which language are you working on today?")
@@ -118,19 +133,41 @@ conn.commit()
 cursor.close()
 conn.close()
 
-#Next: what do you want to do?
 
+#MAIN
+f = Figlet(font='colossal')
+print(f.renderText('C o n l a n g\nB u i l d e r'))
+print("Welcome to Conlang Builder! Choose an option from the list below.\n")
+print_options()
 
-#TESTS
-print(define_new_word(database, 'dog', 'kap'))
-print(define_new_word(database, 'fire', 'şay'))
-# print_dict(database)
-print(check_for_natword(database, 'fire'))
-# print_dict(database)
-print(translate_nat_to_con(database, 'water'))
-print(translate_con_to_nat(database, 'kap'))
-print(edit_entry_by_nat(database, 'dog', 'köpek'))
-# print_dict(database)
-print(edit_entry_by_con(database, 'şay', 'fiyah'))
-# print_dict(database)
-print_dictionary(database)
+while(True):
+    inp = input("\nWhat do you want to do?\n> ")
+    print("")
+    match inp:
+        case "1" | "help":
+            print_options()
+        case "2" | "print": #print_dictionary
+            print_dictionary(database)
+        case "3" | "new": #define_new_word
+            nat = input("Natlang word: ")
+            con = input("Conlang word: ")
+            define_new_word(database, nat, con)
+        case "4" | "trans": #translate
+            inputLang = input("What language are you translating from? (n for natlang, c for conlang)\n")
+            query = input("What word do you want to look up?\n")
+            if inputLang == "n":
+                result = translate_nat_to_con(database, query)
+            elif inputLang == "c":
+                result = translate_con_to_nat(database, query)
+            else:
+                result = "Please choose n or c."
+            print(result)
+        case "5" | "edit": #edit_entry
+            refNat = input("Which natword do you want to edit the entry for?\n")
+            newNat = input("Natword: ")
+            newCon = input("Conword: ")
+            print(edit_entry(database, refNat, newNat, newCon))
+        case "6" | "quit":
+            break
+        case _:
+            print("That doesn't seem to be a valid option.")
