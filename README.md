@@ -7,7 +7,10 @@ Current features:
 * view as a list
 * create new entries
 * edit existing entries
+* a nice CLI
 
 Planned features:
 * recommended natlang words to translate
-* nice CLI
+* a nicer CLI?
+* some way to keep track of word structure rules
+* perhaps even an automatic word generator based on your rules
